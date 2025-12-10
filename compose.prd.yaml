@@ -9,6 +9,9 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    environment:
+      SERVICE_PORT: ${SERVICE_PORT}
+      UPLOAD_SIZE: ${UPLOAD_SIZE}
 
   backend:
     container_name: backend
@@ -19,7 +22,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          'curl --fail --request POST --header ''Content-Type: application/json'' --url ''http://backend:${SERVICE_PORT}'' --data ''{"query":"query { __typename }"}'' || exit 1',
+          "curl -m 5 --fail --request GET --url 'http://backend:${SERVICE_PORT}/api/health'|| exit 1",
         ]
     depends_on:
       database:
@@ -31,6 +34,7 @@ services:
       DB_HOST: ${DB_HOST}
       JWT_SECRET: ${JWT_SECRET}
       COOKIE_TTL: ${COOKIE_TTL}
+      SERVICE_PORT: ${SERVICE_PORT}
 
   database:
     container_name: database
@@ -38,7 +42,7 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d ${DB_DATABASE} -U ${DB_USER}"]
     volumes:
-      - ./persist/db-prd:/var/lib/postgresql
+      - ./persist/database-prd:/var/lib/postgresql
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_DATABASE}
